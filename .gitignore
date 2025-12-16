@@ -1,0 +1,87 @@
+# Ignore Python cache and temporary files
+__pycache__/
+# (ChatGpt says it can math subdirectories,does the same as **/__pycache__/)
+
+# specific file types
+*.pyc
+*.log
+*.bak
+*.pkl
+*.csv
+*.png
+
+# unnecessary config floders
+.vscode/
+.cursor/
+.qoder/
+.windsurf/
+.trae/
+
+# unnecessary message floders
+UVExtenIntro/
+prompt/
+/Others/
+
+# unnecessary but may not exist floders
+readme/
+datas/
+results/
+
+# data and results directories (generic patterns)
+data/
+datasets/
+storage/
+cache/
+tmp/
+temp/
+**/data/
+**/datasets/
+**/results/
+**/output/
+**/artifacts/
+
+# spec-kit
+.specify/
+commands-zh/
+FeatureCatalog/
+
+# local virtual environments (should be managed by my-uv, not committed)
+.venv/
+
+# local databases and data files (must not be committed)
+*.db
+*.sqlite
+*.sqlite3
+*.db-shm
+*.db-wal
+
+# local configuration and secrets (API keys, tokens, etc.)
+.env
+.env.*
+*.env.local
+config/local/
+config/local-*/
+config/**/local.*
+config/**/secret.*
+config/**/secrets.*
+
+# test artifacts
+.pytest_cache/
+.coverage
+htmlcov/
+test/
+
+# IDE & OS specific
+.idea/
+.DS_Store
+
+
+# necessary code blocks
+# !ProcessCenter.py
+# !config/
+# !tools/
+# !utils/
+# !DataModels/
+
+# necessary spec-kit documents
+# !SpecMd/
