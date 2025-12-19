@@ -13,39 +13,20 @@ from typing import Dict, List
 
 from fastmcp import FastMCP
 
-
-mcp = FastMCP("club-ai-hub")
-
-
-FAKE_MEMBERS: List[Dict[str, str]] = [
-    {"id": "1", "name": "Alice", "role": "President"},
-    {"id": "2", "name": "Bob", "role": "Member"},
-]
+from app.mcp_server.backend1_adapter import backend1
 
 
-FAKE_TICKETS: List[Dict[str, str]] = []
+mcp = FastMCP("club-ai-hub", host="127.0.0.1", port=3333)
 
 
 @mcp.tool()
 def search_members(keyword: str) -> List[Dict[str, str]]:
-    return [
-        member
-        for member in FAKE_MEMBERS
-        if keyword.lower() in member["name"].lower()
-    ]
+    return backend1.search_members(keyword)
 
 
 @mcp.tool()
 def create_ticket(title: str, content: str) -> Dict[str, str]:
-    ticket_id = str(len(FAKE_TICKETS) + 1)
-    ticket = {
-        "id": ticket_id,
-        "title": title,
-        "content": content,
-        "status": "created",
-    }
-    FAKE_TICKETS.append(ticket)
-    return ticket
+    return backend1.create_ticket(title, content)
 
 
 @mcp.resource("club://description")
@@ -57,6 +38,6 @@ def description() -> str:
 
 
 if __name__ == "__main__":
-    mcp.run(host="127.0.0.1", port=3333)
+    mcp.run(transport="sse")
 
 

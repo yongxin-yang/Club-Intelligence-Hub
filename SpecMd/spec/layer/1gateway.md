@@ -57,11 +57,12 @@
 
 - 与 MCP Server 层:
   - 通过 HTTP MCP Server URL 建立 Client (如 `http://127.0.0.1:3333`)。
-  - Gateway 仅依赖 MCP Client 暴露的工具列表与调用接口，对具体实现无感。
-- 与 LLM 层:
-  - 使用 OpenAI 官方 Python SDK `OpenAI` 客户端。
-  - 模型名称可配置 (如 `gpt-4o-mini`)，不应写死在多个文件中。
-  - API Key 从环境变量读取，不写入代码库。
+  - Gateway 不直接依赖底层 `mcp.client.sse.Client`, 而是通过 `app.core.mcp_client.create_mcp_client` 获取 MCP Client 实例。
+  - Gateway 仅依赖 MCP Client 暴露的工具列表与调用接口, 对具体实现无感。
+- 与 LLM/core 层:
+  - 通过 `app.core.llm.get_llm_client_and_model` 获取统一封装的 LLM 客户端与模型名称。
+  - 支持 OpenAI/DeepSeek/Kimi 等提供方, 具体选择由环境变量 `LLM_PROVIDER` 控制 (默认 `openai`)。
+  - 各提供方的 API Key、Base URL 与模型名称可从环境变量或本地未纳入版本控制的密钥文件 (如 `config/keys.local.json`) 读取, 不写入代码库。
 - 与前端:
   - 前端只需关注 `/ai/chat` 接口与返回结构，不直接感知 MCP/LLM 细节。
 
@@ -75,4 +76,3 @@
     - 实现 `/ai/chat` 路由与核心逻辑 (LLM + MCP 编排)。
 
 该层的代码实现必须与本规范保持一致，如新增接口或扩展模式，应同步更新本文件。
-

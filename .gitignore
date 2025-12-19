@@ -20,7 +20,7 @@ __pycache__/
 # unnecessary message floders
 UVExtenIntro/
 prompt/
-/Others/
+Others/
 
 # unnecessary but may not exist floders
 readme/
@@ -64,6 +64,7 @@ config/local-*/
 config/**/local.*
 config/**/secret.*
 config/**/secrets.*
+config/keys.local.json
 
 # test artifacts
 .pytest_cache/

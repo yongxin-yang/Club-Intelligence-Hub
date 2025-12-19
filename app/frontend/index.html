@@ -1,0 +1,89 @@
+<!-- 
+File: app/frontend/index.html
+Function: 极简前端页面, 用于测试 AI Gateway
+Call:
+    User -> Browser -> app/gateway/api.py (StaticFiles)
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Club AI Gateway Chat</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        #chat-box { border: 1px solid #ccc; height: 400px; overflow-y: scroll; padding: 10px; margin-bottom: 10px; border-radius: 5px; }
+        .message { margin-bottom: 10px; padding: 8px; border-radius: 5px; }
+        .user { background-color: #e3f2fd; text-align: right; }
+        .assistant { background-color: #f5f5f5; text-align: left; }
+        .tool { background-color: #fff3e0; font-size: 0.9em; color: #666; }
+        #input-area { display: flex; gap: 10px; }
+        #message-input { flex-grow: 1; padding: 8px; }
+        button { padding: 8px 16px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Club AI Chat</h1>
+    <div id="chat-box"></div>
+    <div id="input-area">
+        <input type="text" id="message-input" placeholder="输入你的需求 (例如: 帮我查查 Alice)...">
+        <button onclick="sendMessage()">发送</button>
+    </div>
+
+    <script>
+        const chatBox = document.getElementById('chat-box');
+        const messageInput = document.getElementById('message-input');
+
+        function appendMessage(role, text, type='text') {
+            const div = document.createElement('div');
+            div.className = `message ${role}`;
+            if (type === 'tool_result') {
+                div.classList.add('tool');
+                div.innerText = `[工具调用结果] ${JSON.stringify(text, null, 2)}`;
+            } else {
+                div.innerText = text;
+            }
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const text = messageInput.value.trim();
+            if (!text) return;
+
+            appendMessage('user', text);
+            messageInput.value = '';
+
+            try {
+                const response = await fetch('/ai/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: text })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                if (data.type === 'tool_result') {
+                    // 如果是工具调用结果，先展示结果，实际场景下通常会再次喂给 LLM 生成最终回复
+                    // 这里为了简单，直接展示工具返回的数据
+                    appendMessage('assistant', "执行了工具操作，结果如下:", 'text');
+                    appendMessage('assistant', data.data, 'tool_result');
+                } else {
+                    appendMessage('assistant', data.content);
+                }
+
+            } catch (e) {
+                appendMessage('assistant', `Error: ${e.message}`);
+            }
+        }
+
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+    </script>
+</body>
+</html>

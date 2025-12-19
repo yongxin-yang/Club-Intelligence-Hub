@@ -9,14 +9,14 @@
 
 ## 2. 数据结构与流转过程
 
-### 2.1 v0.1 内存模拟数据结构
+### 2.1 后端系统接入 (Backend1)
 
-- 成员列表 `FAKE_MEMBERS: List[dict]`
-  - 结构示例:
-    - `{ "id": 1, "name": "Alice", "role": "President" }`
-- 工单列表 `FAKE_TICKETS: List[dict]`
-  - 结构示例:
-    - `{ "id": 1, "title": "...", "content": "...", "status": "created" }`
+- 架构模式:
+  - MCP Server 不直接管理数据，而是作为 Adapter 调用 `backend1` 服务。
+  - `backend1` 运行在 `http://127.0.0.1:8001`，提供标准 REST API。
+- 数据结构 (位于 Backend1 内部):
+  - 成员列表 `FAKE_MEMBERS`: 包含 id, name, role, email 等。
+  - 工单列表 `FAKE_TICKETS`: 包含 id, title, content, status 等。
 
 ### 2.2 工具输入输出格式
 
@@ -36,8 +36,9 @@
 
 1. Gateway/LLM 通过 MCP 协议调用工具，如 `search_members` 或 `create_ticket`。
 2. MCP Server 根据工具名称与参数路由至对应 Python 函数。
-3. 工具函数在内存结构或后续接入的真实系统中执行操作。
-4. 返回结果通过 MCP 协议回传给 Gateway/LLM。
+3. 工具函数调用 `backend1_adapter` 向 `backend1` 发送 HTTP 请求。
+4. `backend1` 执行业务逻辑并返回 JSON 数据。
+5. MCP Server 将结果原样或处理后返回给 Gateway/LLM。
 
 ## 3. 验证规则与约束条件
 
@@ -66,7 +67,8 @@
 - 主要文件:
   - `server.py`
     - 创建 FastMCP 实例并注册工具/资源。
-    - 定义 `search_members` 与 `create_ticket` 等示例工具。
+    - 导入 `app.mcp_server.backend1_adapter.backend1` 作为客户端。
+    - 定义 `search_members` 等工具，内部代理调用 `backend1.search_members`。
     - 在 `__main__` 分支中调用 `mcp.run(host, port)` 以 HTTP 模式启动。
 
 添加新工具时，必须同时:

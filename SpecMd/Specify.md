@@ -15,7 +15,8 @@
 1. 2025-12-15 v0.1-init
    - [x] 新建 SpecMd 目录及规范文档骨架。
    - [x] 设计并创建 app/gateway 与 app/mcp_server 代码结构，与 Structure.md 对齐。
-   - [ ] 编写并通过基础接口连通性测试 (MCP Server + Gateway Chat 接口)。
+   - [x] 实现 Backend1 模拟服务与 Adapter 适配层。
+   - [x] 编写并通过基础接口连通性测试 (Backend1 + MCP Server + Gateway)。
 
 # 需求阶段: 代码还未实现
 

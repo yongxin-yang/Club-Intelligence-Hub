@@ -16,6 +16,7 @@
   - `Specify.md` 需求迭代总览与版本记录
   - `Structure.md` 全局架构与目录说明 (本文件)
   - `ProjectRules.md` 项目级开发规范与底线
+  - `QuickStart.md` 快速开始与接口集成指南 (Startup & Integration)
   - `spec/layer/` 各代码层级规范
   - `spec/workflow/` 关键业务/交互工作流说明
 - `app/` Python 代码主目录
@@ -50,23 +51,44 @@
 - 目录: `app/mcp_server/`
 - 主要职责:
   - 使用 FastMCP 定义 MCP Server，将各业务系统能力包装为工具。
-  - 对上游 (Gateway/LLM) 屏蔽底层系统差异，提供稳定的工具接口。
-  - v0.1 使用内存 FAKE 数据结构模拟成员与工单系统，后续替换为真实 API/ORM。
+  - 通过 Adapter 模式调用后端业务系统 (Backend1)，屏蔽底层系统差异。
+  - v0.1 通过 HTTP 调用 `backend1` 模拟接口，不再直接使用内存 Fake 数据。
 - 关键文件:
   - `app/mcp_server/server.py`
-    - 定义 MCP 实例、工具与资源:
-      - 查询类工具: `search_members`
-      - 写操作类工具: `create_ticket`
-      - 资源: `club://description` 作为系统描述
+    - 定义 MCP 实例、工具与资源。
+    - 通过 `backend1_adapter` 转发请求到真实(模拟)后端。
     - 通过 `mcp.run(host, port)` 以 HTTP 模式对外提供 MCP 能力。
+  - `app/mcp_server/backend1_adapter/client.py`
+    - 封装对 Backend1 (http://127.0.0.1:8001) 的 API 调用。
 
-### 3.3 预留核心层 (core)
+### 3.6 backend1 (模拟业务系统)
 
-- 目录: 预留 `app/core/` (当前版本暂未创建文件)
-- 规划用途:
-  - 统一管理配置与环境读取 (如 OpenAI/MCP 相关配置)。
-  - 抽象与 LLM 的调用策略、模型选择与成本控制。
-  - 日志记录与操作审计。
+- 目录: `backend1/`
+- 主要职责:
+  - 模拟现有的社团业务系统后端 API。
+  - 提供成员查询与工单创建的 REST 接口。
+  - 使用内存列表存储数据 (模拟数据库)。
+- 关键文件:
+  - `backend1/main.py`: FastAPI 应用入口。
+
+### 3.3 app.core (核心配置、LLM 与 MCP Client 层)
+
+- 目录: `app/core/`
+- 主要职责:
+  - 统一管理与外部 LLM 服务相关的配置与客户端创建 (OpenAI/DeepSeek/Kimi 等)。
+  - 提供 MCP Client 的创建与 MCP Server URL 读取, 为 Gateway 提供统一接口。
+  - 抽象提供方选择策略与模型名称配置, 后续扩展日志记录与操作审计能力。
+- 关键文件:
+  - `app/core/llm.py`
+    - 定义 `get_llm_provider` 用于从环境变量选择当前 LLM 提供方 (默认 `openai`)。
+    - 定义 `get_llm_client_and_model` 统一根据提供方构造客户端与模型名称, 支持通过环境变量或本地密钥文件配置不同服务:
+      - OpenAI: `OPENAI_API_KEY` / `OPENAI_MODEL`
+      - DeepSeek: `DEEPSEEK_API_KEY` / `DEEPSEEK_BASE_URL` / `DEEPSEEK_MODEL`
+      - Kimi: `KIMI_API_KEY` / `KIMI_BASE_URL` / `KIMI_MODEL`
+    - 支持通过 `LLM_KEY_FILE` 指定本地密钥文件路径 (默认 `config/keys.local.json`), 在不提交仓库的前提下集中管理各类 Key。
+  - `app/core/mcp_client.py`
+    - 定义 `get_mcp_server_url` 用于从环境变量读取 MCP Server URL (默认 `http://127.0.0.1:3333`)。
+    - 定义 `create_mcp_client` 基于 URL 创建 SSE 协议的 MCP Client, 供 Gateway 调用。
 
 ### 3.4 test 目录 (测试层)
 
