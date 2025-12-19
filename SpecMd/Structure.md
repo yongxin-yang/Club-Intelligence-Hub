@@ -81,11 +81,10 @@
 - 关键文件:
   - `app/core/llm.py`
     - 定义 `get_llm_provider` 用于从环境变量选择当前 LLM 提供方 (默认 `openai`)。
-    - 定义 `get_llm_client_and_model` 统一根据提供方构造客户端与模型名称, 支持通过环境变量或本地密钥文件配置不同服务:
-      - OpenAI: `OPENAI_API_KEY` / `OPENAI_MODEL`
-      - DeepSeek: `DEEPSEEK_API_KEY` / `DEEPSEEK_BASE_URL` / `DEEPSEEK_MODEL`
-      - Kimi: `KIMI_API_KEY` / `KIMI_BASE_URL` / `KIMI_MODEL`
-    - 支持通过 `LLM_KEY_FILE` 指定本地密钥文件路径 (默认 `config/keys.local.json`), 在不提交仓库的前提下集中管理各类 Key。
+    - 定义 `get_llm_client_and_model` 统一根据提供方构造客户端与模型名称, 支持通过环境变量或本地密钥文件配置不同服务。
+  - `app/core/config/`
+    - `models.py`: 定义 LLM 模型枚举与提供方映射。
+    - `agents.py`: 定义智能体/规则枚举与 Prompt 模板。
   - `app/core/mcp_client.py`
     - 定义 `get_mcp_server_url` 用于从环境变量读取 MCP Server URL (默认 `http://127.0.0.1:3333`)。
     - 定义 `create_mcp_client` 基于 URL 创建 SSE 协议的 MCP Client, 供 Gateway 调用。

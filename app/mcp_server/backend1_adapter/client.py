@@ -37,5 +37,15 @@ class Backend1Client:
             print(f"[ERROR] Backend1 create_ticket failed: {e}")
             return {"error": str(e)}
 
+    def list_activities(self) -> List[Dict[str, Any]]:
+        try:
+            with httpx.Client(base_url=self.base_url) as client:
+                response = client.get("/activities")
+                response.raise_for_status()
+                return response.json()
+        except Exception as e:
+            print(f"[ERROR] Backend1 list_activities failed: {e}")
+            return []
+
 # 全局单例
 backend1 = Backend1Client()

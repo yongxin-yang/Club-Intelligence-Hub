@@ -17,6 +17,7 @@
 - 数据结构 (位于 Backend1 内部):
   - 成员列表 `FAKE_MEMBERS`: 包含 id, name, role, email 等。
   - 工单列表 `FAKE_TICKETS`: 包含 id, title, content, status 等。
+  - 活动列表 `FAKE_ACTIVITIES`: 包含 id, name, time, location 等。
 
 ### 2.2 工具输入输出格式
 
@@ -25,6 +26,10 @@
     - `keyword: str`，匹配成员姓名的关键字 (大小写不敏感)。
   - 返回:
     - 满足 `keyword` 条件的成员字典列表。
+- 查询类工具 `list_activities() -> List[dict]`
+  - 输入参数: 无。
+  - 返回:
+    - 所有活动的列表。
 - 写操作类工具 `create_ticket(title: str, content: str) -> dict`
   - 输入参数:
     - `title: str`，工单标题。

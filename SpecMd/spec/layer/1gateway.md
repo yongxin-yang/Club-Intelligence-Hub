@@ -6,16 +6,35 @@
 - 适用范围:
   - 所有与 AI 对话/智能操作相关的 HTTP API。
   - v0.1 仅实现 Chat Mode 接口，路径为 `/ai/chat`。
+  - 提供模型列表查询接口 `/ai/models`。
 
 ## 2. 输入输出格式与数据流转
 
 ### 2.1 输入格式 (HTTP 请求)
 
+#### 模型列表
+- 方法: `GET`
+- 路径: `/ai/models`
+- 返回: `{"models": ["gpt-4o", "deepseek-chat", ...]}`
+
+#### 工具列表
+- 方法: `GET`
+- 路径: `/ai/tools`
+- 返回: `{"tools": [{"name": "search_members", "description": "..."}, ...]}`
+
+#### 智能体列表
+- 方法: `GET`
+- 路径: `/ai/agents`
+- 返回: `{"agents": [{"id": "agent_default", "name": "通用助手", "description": "..."}, ...]}`
+
+#### 聊天请求
 - 方法: `POST`
 - 路径: `/ai/chat`
 - 请求体 JSON 结构:
   - `message: str` 必填，用户输入的自然语言内容。
+  - `history: List[Dict[str, str]]` 选填，历史对话记录，格式如 `[{"role": "user", "content": "..."}, {"role": "assistant", "content": "..."}]`。
   - `user_id: str | null` 选填，调用者标识 (用于后续权限与上下文扩展)。
+  - `model: str | null` 选填，指定使用的 LLM 模型名称。
   - `mode: str | null` 选填，交互模式，v0.1 若为空或未提供，默认视为 `"chat"`。
 
 ### 2.2 输出格式 (HTTP 响应)
@@ -61,10 +80,12 @@
   - Gateway 仅依赖 MCP Client 暴露的工具列表与调用接口, 对具体实现无感。
 - 与 LLM/core 层:
   - 通过 `app.core.llm.get_llm_client_and_model` 获取统一封装的 LLM 客户端与模型名称。
-  - 支持 OpenAI/DeepSeek/Kimi 等提供方, 具体选择由环境变量 `LLM_PROVIDER` 控制 (默认 `openai`)。
-  - 各提供方的 API Key、Base URL 与模型名称可从环境变量或本地未纳入版本控制的密钥文件 (如 `config/keys.local.json`) 读取, 不写入代码库。
+  - 模型与提供方配置迁移至 `app.core.config.models`，使用枚举类 `LLMProvider` 和 `ModelList` 管理。
+  - 智能体/规则配置迁移至 `app.core.config.agents`，使用枚举类 `AgentType` 管理。
+  - 支持 OpenAI/DeepSeek/Kimi 等提供方, 具体选择由环境变量 `LLM_PROVIDER` 控制。
 - 与前端:
   - 前端只需关注 `/ai/chat` 接口与返回结构，不直接感知 MCP/LLM 细节。
+  - 生产环境前端应支持配置 API Base URL，而非硬编码为相对路径，以适应跨域部署场景。
 
 ## 5. 代码与文件结构
 

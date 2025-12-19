@@ -23,6 +23,11 @@ FAKE_MEMBERS = [
 
 FAKE_TICKETS = []
 
+FAKE_ACTIVITIES = [
+    {"id": "1", "name": "Annual Party", "time": "2025-12-31 20:00", "location": "Hall A"},
+    {"id": "2", "name": "Tech Talk", "time": "2025-12-25 15:00", "location": "Room 101"},
+]
+
 class TicketCreate(BaseModel):
     title: str
     content: str
@@ -62,6 +67,11 @@ def create_ticket(ticket: TicketCreate):
 def list_tickets():
     """列出所有工单"""
     return FAKE_TICKETS
+
+@app.get("/activities", response_model=List[Dict[str, str]])
+def list_activities():
+    """列出所有活动"""
+    return FAKE_ACTIVITIES
 
 if __name__ == "__main__":
     # 运行在 8001 端口, 避免与 Gateway (8000) 和 MCP Server (3333) 冲突

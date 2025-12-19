@@ -29,6 +29,11 @@ def create_ticket(title: str, content: str) -> Dict[str, str]:
     return backend1.create_ticket(title, content)
 
 
+@mcp.tool()
+def list_activities() -> List[Dict[str, str]]:
+    return backend1.list_activities()
+
+
 @mcp.resource("club://description")
 def description() -> str:
     return (

@@ -25,7 +25,13 @@
 ```json
 {
   "message": "查一下名字里有 Ali 的成员",
+  "history": [
+    {"role": "user", "content": "你好"},
+    {"role": "assistant", "content": "你好！"}
+  ],
   "user_id": "u123",
+  "model": "gpt-4o",
+  "agent_id": "agent_default", // Optional
   "mode": "chat"
 }
 ```
@@ -34,15 +40,17 @@
 
 - 解析 JSON 为内部请求模型。
 - 基于 `mode` 决定使用 Chat Mode 逻辑 (v0.1 仅支持 chat)。
-- 通过 MCP Client 调用 `list_tools` 获取工具列表 (如 `search_members`, `create_ticket` 等)。
+- 整合 `history` 与当前 `message` 构造完整的上下文。
+- 通过 MCP Client 调用 `list_tools` 获取工具列表 (如 `search_members`, `create_ticket`, `list_activities` 等)。
 
 ### 步骤 3: 调用 LLM
 
 - 构造 messages:
   - system: 描述角色为“社团管理系统 AI 助手”，必须通过工具访问系统数据。
+  - history messages (如果存在)。
   - user: 用户输入的 `message`。
 - 构造 tools 参数: 使用 MCP 返回的工具描述映射为 OpenAI tools 格式。
-- 调用 `chat.completions.create`，开启 `tool_choice="auto"`。
+- 调用 `chat.completions.create`，开启 `tool_choice="auto"`，指定 `model` 参数。
 
 ### 步骤 4: 处理工具调用
 

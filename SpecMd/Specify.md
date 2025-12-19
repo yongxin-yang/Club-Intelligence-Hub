@@ -18,6 +18,15 @@
    - [x] 实现 Backend1 模拟服务与 Adapter 适配层。
    - [x] 编写并通过基础接口连通性测试 (Backend1 + MCP Server + Gateway)。
 
+## v0.1.1 基础 AI Client 工作流与历史记录支持
+- 时间: 2025-12-19
+- 背景: 为了支持前端完整的对话体验，需要实现模型选择、历史记录上下文传递以及 Backend1 的活动列表查询功能。
+- 任务:
+  - [x] Backend1: 新增 `/activities` 接口。
+   - [x] MCP Server: 新增 `list_activities` 工具。
+   - [x] Gateway: 新增 `/ai/models` 接口；`/ai/chat` 支持 `model` 与 `history` 参数。
+   - [x] Frontend: 实现模型选择、聊天界面与历史记录展示。
+
 # 需求阶段: 代码还未实现
 
 ## v0.2 Agent 模式与二次确认机制

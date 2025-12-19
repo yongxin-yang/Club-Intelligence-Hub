@@ -47,7 +47,10 @@ def _get_config(name: str) -> str | None:
     value = os.environ.get(name)
     if value is not None:
         return value
-    return _load_local_keys().get(name)
+    # Force reload keys if not found to ensure latest config is used
+    if _LOCAL_KEYS is None or name not in _LOCAL_KEYS:
+        _load_local_keys()
+    return _LOCAL_KEYS.get(name) if _LOCAL_KEYS else None
 
 
 def get_llm_client_and_model() -> Tuple[OpenAI, str]:

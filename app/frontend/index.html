@@ -24,15 +24,88 @@ Call:
 </head>
 <body>
     <h1>Club AI Chat</h1>
+    <div id="controls" style="margin-bottom: 10px; display: flex; gap: 10px; flex-wrap: wrap;">
+        <div>
+            <label for="model-select">模型: </label>
+            <select id="model-select"><option value="">加载中...</option></select>
+        </div>
+        <div>
+            <label for="agent-select">智能体: </label>
+            <select id="agent-select"><option value="">加载中...</option></select>
+        </div>
+    </div>
+    <div id="tools-display" style="margin-bottom: 10px; font-size: 0.85em; color: #666;">
+        <strong>可用工具:</strong> <span id="tools-list">加载中...</span>
+    </div>
     <div id="chat-box"></div>
     <div id="input-area">
-        <input type="text" id="message-input" placeholder="输入你的需求 (例如: 帮我查查 Alice)...">
+        <input type="text" id="message-input" placeholder="输入你的需求 (例如: 社团有哪些活动)...">
         <button onclick="sendMessage()">发送</button>
     </div>
 
     <script>
         const chatBox = document.getElementById('chat-box');
         const messageInput = document.getElementById('message-input');
+        const modelSelect = document.getElementById('model-select');
+        const agentSelect = document.getElementById('agent-select');
+        const toolsList = document.getElementById('tools-list');
+        let history = []; // Store conversation history
+
+        // Configuration: API Base URL
+        // In local development (served by FastAPI), relative path '/' works.
+        // In production or separate deployment, set this to the full URL, e.g., 'http://api.gateway.com'
+        // We try to read it from window.config or default to empty string (relative path)
+        const API_BASE_URL = (window.config && window.config.apiBaseUrl) || '';
+
+        // Fetch config data on load
+        window.addEventListener('load', async () => {
+            // 1. Fetch Models
+            try {
+                const res = await fetch(`${API_BASE_URL}/ai/models`);
+                const data = await res.json();
+                modelSelect.innerHTML = '';
+                data.models.forEach(model => {
+                    const opt = document.createElement('option');
+                    opt.value = model;
+                    opt.innerText = model;
+                    modelSelect.appendChild(opt);
+                });
+            } catch (e) {
+                console.error("Failed to load models", e);
+                modelSelect.innerHTML = '<option value="">加载失败</option>';
+            }
+
+            // 2. Fetch Agents
+            try {
+                const res = await fetch(`${API_BASE_URL}/ai/agents`);
+                const data = await res.json();
+                agentSelect.innerHTML = '';
+                data.agents.forEach(agent => {
+                    const opt = document.createElement('option');
+                    opt.value = agent.id;
+                    opt.innerText = agent.name;
+                    opt.title = agent.description;
+                    agentSelect.appendChild(opt);
+                });
+            } catch (e) {
+                console.error("Failed to load agents", e);
+                agentSelect.innerHTML = '<option value="">加载失败</option>';
+            }
+
+            // 3. Fetch Tools
+            try {
+                const res = await fetch(`${API_BASE_URL}/ai/tools`);
+                const data = await res.json();
+                if (data.tools && data.tools.length > 0) {
+                    toolsList.innerText = data.tools.map(t => t.name).join(', ');
+                } else {
+                    toolsList.innerText = '无可用工具';
+                }
+            } catch (e) {
+                console.error("Failed to load tools", e);
+                toolsList.innerText = '加载失败';
+            }
+        });
 
         function appendMessage(role, text, type='text') {
             const div = document.createElement('div');
@@ -51,14 +124,22 @@ Call:
             const text = messageInput.value.trim();
             if (!text) return;
 
+            // 1. Display User Message
             appendMessage('user', text);
             messageInput.value = '';
 
             try {
-                const response = await fetch('/ai/chat', {
+                // 2. Prepare Request
+                const payload = {
+                    message: text,
+                    history: history,
+                    model: modelSelect.value
+                };
+
+                const response = await fetch(`${API_BASE_URL}/ai/chat`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: text })
+                    body: JSON.stringify(payload)
                 });
 
                 if (!response.ok) {
@@ -67,13 +148,24 @@ Call:
 
                 const data = await response.json();
                 
+                // 3. Handle Response & Update History
+                // Add user message to history
+                history.push({ role: 'user', content: text });
+
                 if (data.type === 'tool_result') {
-                    // 如果是工具调用结果，先展示结果，实际场景下通常会再次喂给 LLM 生成最终回复
-                    // 这里为了简单，直接展示工具返回的数据
+                    // Gateway v0.1: tool results are returned directly. 
+                    // In a full chat loop, Gateway/LLM would summarize this.
+                    // For now, we display the raw result and add it as assistant message to history 
+                    // (simplified, ideally tool outputs are distinct roles).
+                    const toolOutput = JSON.stringify(data.data);
                     appendMessage('assistant', "执行了工具操作，结果如下:", 'text');
                     appendMessage('assistant', data.data, 'tool_result');
+                    
+                    // For history context, we treat tool result as assistant info
+                    history.push({ role: 'assistant', content: `Tool Output: ${toolOutput}` });
                 } else {
                     appendMessage('assistant', data.content);
+                    history.push({ role: 'assistant', content: data.content });
                 }
 
             } catch (e) {
